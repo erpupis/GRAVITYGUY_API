@@ -25,10 +25,12 @@ init_routes1(model_dao)
 
 # Create the FastAPI app and include the routes
 app = FastAPI()
+app.include_router(router3)
 app.include_router(router1)
 app.include_router(router2)
-app.include_router(router3)
 app.include_router(router4)
+print(app.routes)
+
 
 # Run the FastAPI app with Uvicorn
 if __name__ == "__main__":
