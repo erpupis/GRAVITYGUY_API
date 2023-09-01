@@ -14,6 +14,7 @@ class RunDao:
         placeholders = ', '.join(['%s'] * len(fields))  # Placeholders for the query
         query = f'''
             INSERT INTO RUNS ({columns}) VALUES ({placeholders})
+            ON CONFLICT (player_name, run_start) DO NOTHING
         '''
         params = tuple(fields.values())  # Values for the query
         execute_query(query, params)

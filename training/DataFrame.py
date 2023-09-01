@@ -63,8 +63,9 @@ def process_data(player_name):
     X_train, X_test, y_train, y_test = perform_train_test_split(X, y)
 
     X_train, X_test, y_train, y_test = cast_data_types(X_train, X_test, y_train, y_test)
-
+    print(X_test)
     return X_train, X_test, y_train, y_test
 
+process_data('excale')
 
 

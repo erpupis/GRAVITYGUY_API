@@ -1,7 +1,6 @@
 from entities.model_entity import Model
 from core.database import Database
 from utils.query_execution import execute_query
-from datetime import datetime
 
 
 class ModelDao:
@@ -29,8 +28,13 @@ class ModelDao:
         fields = model.dict()  # Convert Pydantic model to dictionary
         columns = ', '.join(fields.keys())  # Columns for the query
         placeholders = ', '.join(['%s'] * len(fields))  # Placeholders for the query
+        update_clause = ', '.join([f"{col} = EXCLUDED.{col}" for col in fields.keys()])
+
         query = f'''
-                    INSERT INTO MODELS ({columns}) VALUES ({placeholders})
-                '''
+            INSERT INTO MODELS ({columns}) VALUES ({placeholders})
+            ON CONFLICT (player_name) DO UPDATE SET {update_clause}
+        '''
+
         params = tuple(fields.values())  # Values for the query
         execute_query(query, params)
+

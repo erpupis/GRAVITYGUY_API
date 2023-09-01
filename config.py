@@ -2,11 +2,11 @@
 
 # Database connection details
 DATABASE = {
-    'NAME': 'database_name',
-    'USER': 'user',
-    'PASSWORD': 'password',
-    'HOST': 'host',
-    'PORT': 'port'
+    'NAME': 'GravityGuy',
+    'USER': 'postgres',
+    'PASSWORD': 'monopolino1',
+    'HOST': 'localhost',
+    'PORT': '5432'
 }
 
 SERVER = {
