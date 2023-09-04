@@ -7,7 +7,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
+from sklearn.metrics import precision_recall_curve
 import math
+import matplotlib.pyplot as plt
+
 
 def load_data(player_name):
     return process_data(player_name)
@@ -75,7 +78,14 @@ def train(player_name):
     nn_accuracy = evaluate_model(nn_model, X_test, y_test, model_type='nn')
     nn_weights_base64 = save_nn_weights(nn_model)
     nn_predictions_raw = nn_model.predict(X_test)
-    nn_predictions = [1 if prob >= 0.5 else 0 for prob in nn_predictions_raw]
+
+    # Determine the optimal threshold
+
+    precision, recall, thresholds = precision_recall_curve(y_test, nn_predictions_raw)
+    f1_scores = 2 * (precision * recall) / (precision + recall)
+    best_threshold = thresholds[f1_scores.argmax()]
+
+    nn_predictions = [1 if prob >= best_threshold else 0 for prob in nn_predictions_raw]
     nn_precision = precision_score(y_test, nn_predictions)
     nn_recall = recall_score(y_test, nn_predictions)
 
@@ -95,17 +105,28 @@ def train(player_name):
 
     train_end = datetime.datetime.now().isoformat()
 
+    # Plot the precision-recall curve
+    plt.figure(figsize=(10, 7))
+    plt.plot(recall, precision, marker='.', label='Neural Network')
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title('Precision-Recall Curve')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
     print(f"Neural Network Test Accuracy: {nn_accuracy}")
     print(f"Neural Network Precision: {nn_precision}")
     print(f"Neural Network Recall: {nn_recall}")
     print(f"nn raw predictions: {nn_predictions_raw}")
     print(f"nn predictions: {nn_predictions}")
+    print(f"Optimal threshold for Neural Network: {best_threshold}")
     print(f"Random Forest Test Accuracy: {rf_accuracy}")
     print(f"k-NN Test Accuracy: {knn_accuracy}")
     print(f"Logistic Regression Test Accuracy: {log_accuracy}")
 
     return train_start, train_end, nn_weights_base64, nn_accuracy, nn_precision
 
-
-if __name__ == "__main__":
-    train('excale')
+#for testing
+#if __name__ == "__main__":
+#    train('excale')
