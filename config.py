@@ -34,6 +34,7 @@ TABLES = {
             collect_angle FLOAT,
             collect_length FLOAT,
             gravity_dir FLOAT,
+            speed FLOAT,
             on_ground_top BOOLEAN,
             on_ground_bot BOOLEAN,
             switch_gravity BOOLEAN,

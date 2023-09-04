@@ -7,10 +7,10 @@ def create_model(X_train):
     model = Sequential()
 
     # Input layer
-    model.add(Dense(128, activation='relu', input_shape=(X_train.shape[1],)))
+    model.add(Dense(512, activation='relu', input_shape=(X_train.shape[1],)))
 
     # Hidden layers
-    model.add(Dense(64, activation='relu'))
+    model.add(Dense(256, activation='relu'))
 
     # Output layer - Using sigmoid for binary classification
     model.add(Dense(1, activation='sigmoid'))

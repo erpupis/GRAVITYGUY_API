@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from entities.model_entity import Model
 from daos.model_dao import ModelDao
-from training.training import train
+from training.training import main
 
 router1 = APIRouter()
 
@@ -19,7 +19,7 @@ def init_routes1(dao: ModelDao):
 
     @router1.post("/model_train/")
     async def train_model(player_name: str):
-        train_start, train_end, weights_base64, test_accuracy = train(player_name)
+        train_start, train_end, weights_base64, test_accuracy = main(player_name)
         model = Model(
             player_name=player_name,
             train_start=train_start,

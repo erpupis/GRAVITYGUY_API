@@ -32,7 +32,7 @@ def extract_run(json_path: str) -> Run:
     run = Run(
         player_name= info['playerName'],
         run_start= info['runStart'],
-        run_end= info['runStart'],
+        run_end= info['runEnd'],
         score= info['score'],
         seed= info['seed']
     )
@@ -49,7 +49,7 @@ def deserialize(json_path: str, dat_path: str) -> List[InputData]:
     run_start = info.get('runStart')
 
     inputs = read_binary_file(dat_path)
-    fmt = "q8f3?"
+    fmt = "q9f3?"
 
     deserialized_states = []
     offset = 0

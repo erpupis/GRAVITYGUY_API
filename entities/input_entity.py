@@ -13,6 +13,7 @@ class InputData(pydantic.BaseModel):
     collect_angle: float
     collect_length: float
     gravity_dir: float
+    speed: float
     on_ground_top: bool
     on_ground_bot: bool
     switch_gravity: bool
