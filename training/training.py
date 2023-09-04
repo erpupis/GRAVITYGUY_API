@@ -6,6 +6,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
 import math
 
 def load_data(player_name):
@@ -76,6 +77,7 @@ def train(player_name):
     nn_predictions_raw = nn_model.predict(X_test)
     nn_predictions = [1 if prob >= 0.5 else 0 for prob in nn_predictions_raw]
     nn_precision = precision_score(y_test, nn_predictions)
+    nn_recall = recall_score(y_test, nn_predictions)
 
     # Random Forest
     rf_model = train_rf_model(X_train, y_train)
@@ -95,6 +97,9 @@ def train(player_name):
 
     print(f"Neural Network Test Accuracy: {nn_accuracy}")
     print(f"Neural Network Precision: {nn_precision}")
+    print(f"Neural Network Recall: {nn_recall}")
+    print(f"nn raw predictions: {nn_predictions_raw}")
+    print(f"nn predictions: {nn_predictions}")
     print(f"Random Forest Test Accuracy: {rf_accuracy}")
     print(f"k-NN Test Accuracy: {knn_accuracy}")
     print(f"Logistic Regression Test Accuracy: {log_accuracy}")

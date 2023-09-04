@@ -66,5 +66,4 @@ def deserialize(json_path: str, dat_path: str) -> List[InputData]:
         deserialized_states.append(input_features)
         offset += state_raw_size
 
-    print(deserialized_states)
     return deserialized_states
