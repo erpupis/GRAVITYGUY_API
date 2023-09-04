@@ -5,6 +5,7 @@ import base64
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import precision_score
 import math
 
 def load_data(player_name):
@@ -72,6 +73,9 @@ def train(player_name):
     nn_model = train_nn_model(X_train, y_train)
     nn_accuracy = evaluate_model(nn_model, X_test, y_test, model_type='nn')
     nn_weights_base64 = save_nn_weights(nn_model)
+    nn_predictions_raw = nn_model.predict(X_test)
+    nn_predictions = [1 if prob >= 0.5 else 0 for prob in nn_predictions_raw]
+    nn_precision = precision_score(y_test, nn_predictions)
 
     # Random Forest
     rf_model = train_rf_model(X_train, y_train)
@@ -90,12 +94,13 @@ def train(player_name):
     train_end = datetime.datetime.now().isoformat()
 
     print(f"Neural Network Test Accuracy: {nn_accuracy}")
+    print(f"Neural Network Precision: {nn_precision}")
     print(f"Random Forest Test Accuracy: {rf_accuracy}")
     print(f"k-NN Test Accuracy: {knn_accuracy}")
     print(f"Logistic Regression Test Accuracy: {log_accuracy}")
 
-    return train_start, train_end, nn_weights_base64, nn_accuracy, rf_accuracy, knn_accuracy, log_accuracy
+    return train_start, train_end, nn_weights_base64, nn_accuracy, nn_precision
 
 
-#if __name__ == "__main__":
-#    main('excale')
+if __name__ == "__main__":
+    train('excale')
