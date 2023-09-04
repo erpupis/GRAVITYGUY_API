@@ -63,7 +63,7 @@ def log_feature_importance(model):
         print(f"Feature {i}: {importance}")
 
 
-def main(player_name):
+def train(player_name):
     train_start = datetime.datetime.now().isoformat()
 
     X_train, X_test, y_train, y_test = load_data(player_name)
@@ -97,5 +97,5 @@ def main(player_name):
     return train_start, train_end, nn_weights_base64, nn_accuracy, rf_accuracy, knn_accuracy, log_accuracy
 
 
-if __name__ == "__main__":
-    main('excale')
+#if __name__ == "__main__":
+#    main('excale')
