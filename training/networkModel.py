@@ -1,5 +1,5 @@
-from keras.models import Sequential
-from keras.layers import Dense
+from tensorflow.python.keras.layers import Dense
+from tensorflow.python.keras.models import Sequential
 
 def create_model(X_train):
 

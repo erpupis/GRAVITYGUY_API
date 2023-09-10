@@ -1,15 +1,17 @@
 from training.DataFrame import process_data
 from training.networkModel import create_model
-import datetime
-import base64
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import precision_recall_curve
-import math
 import matplotlib.pyplot as plt
+import math
+import datetime
+import base64
+import tf2onnx
+import io
 
 
 def load_data(player_name):
@@ -68,6 +70,21 @@ def log_feature_importance(model):
         print(f"Feature {i}: {importance}")
 
 
+def keras_to_onnx_bytes(keras_model):
+    # Convert the Keras model to ONNX format
+    model_proto, _ = tf2onnx.convert.from_keras(
+        keras_model,
+        opset=13
+    )
+
+    # Save the ONNX model to a bytes buffer
+    buffer = io.BytesIO()
+    buffer.write(model_proto.SerializeToString())
+
+    # Return the bytes buffer to the caller
+    return buffer.getvalue()
+
+
 def train(player_name):
     train_start = datetime.datetime.now().isoformat()
 
@@ -76,8 +93,8 @@ def train(player_name):
     # Neural Network
     nn_model = train_nn_model(X_train, y_train)
     nn_accuracy = evaluate_model(nn_model, X_test, y_test, model_type='nn')
-    nn_weights_base64 = save_nn_weights(nn_model)
     nn_predictions_raw = nn_model.predict(X_test)
+    onnx_model = keras_to_onnx_bytes(nn_model)
 
     # Determine the optimal threshold
 
@@ -125,7 +142,7 @@ def train(player_name):
     print(f"k-NN Test Accuracy: {knn_accuracy}")
     print(f"Logistic Regression Test Accuracy: {log_accuracy}")
 
-    return train_start, train_end, nn_weights_base64, nn_accuracy, nn_precision
+    return train_start, train_end, onnx_model, nn_accuracy, nn_precision
 
 #for testing
 #if __name__ == "__main__":
