@@ -1,6 +1,7 @@
 from sklearn.preprocessing import MinMaxScaler
 from daos.input_dao import InputDao
 from core.database import Database
+from imblearn.over_sampling import SMOTE
 import numpy as np
 from sklearn.model_selection import train_test_split
 
@@ -8,7 +9,10 @@ def initialize_database():
     db = Database()
     db.initialize()
     return db
-
+def oversample_data(X_train, y_train):
+    smote = SMOTE(random_state=42)
+    X_resampled, y_resampled = smote.fit_resample(X_train, y_train)
+    return X_resampled, y_resampled
 
 def fetch_player_data(db, player_name):
     dao = InputDao(db)
@@ -41,18 +45,13 @@ def perform_train_test_split(X, y):
 
 
 def cast_data_types(X_train, X_test, y_train, y_test):
-    for X in [X_train, X_test]:
-        if 'on_ground_top' in X.columns:
-            X['on_ground_top'] = X['on_ground_top'].astype('int32')
-        if 'on_ground_bot' in X.columns:
-            X['on_ground_bot'] = X['on_ground_bot'].astype('int32')
-
-        X.astype('float32')
-
-    y_train = y_train.astype('int32')
-    y_test = y_test.astype('int32')
+    X_train = X_train.astype('float32')
+    X_test = X_test.astype('float32')
+    y_train = y_train.astype('float32')
+    y_test = y_test.astype('float32')
 
     return X_train.to_numpy(), X_test.to_numpy(), y_train.to_numpy(), y_test.to_numpy()
+
 
 
 def process_data(player_name):
@@ -68,6 +67,9 @@ def process_data(player_name):
 
     X, y = split_features_labels(df)
     X_train, X_test, y_train, y_test = perform_train_test_split(X, y)
+
+    # Add oversampling here
+    X_train, y_train = oversample_data(X_train, y_train)
 
     X_train, X_test, y_train, y_test = cast_data_types(X_train, X_test, y_train, y_test)
     return X_train, X_test, y_train, y_test

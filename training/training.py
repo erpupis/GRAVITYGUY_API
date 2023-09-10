@@ -6,6 +6,10 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import precision_recall_curve
+from sklearn.utils import compute_class_weight
+from sklearn.utils.class_weight import compute_sample_weight
+import onnxruntime as rt
+import numpy as np
 import matplotlib.pyplot as plt
 import math
 import datetime
@@ -31,7 +35,8 @@ def closest_odd_sqrt(N):
 
 def train_nn_model(X_train, y_train):
     model = create_model(X_train)
-    model.fit(X_train, y_train, epochs=10, batch_size=32, validation_split=0.2)
+    class_weights = {0: 1, 1: 1}
+    model.fit(X_train, y_train, epochs=10, batch_size=32, validation_split=0.2, class_weight=class_weights)
     return model
 
 
@@ -50,13 +55,14 @@ def train_log_model(X_train, y_train):
     log.fit(X_train, y_train)
     return log
 
-def evaluate_model(model, X_test, y_test, model_type='nn'):
+def evaluate_model(model, X_test, y_test, threshold, model_type='nn'):
     if model_type == 'nn':
-        _, accuracy = model.evaluate(X_test, y_test)
+        nn_predictions_raw = model.predict(X_test)
+        nn_predictions = [1 if prob >= threshold else 0 for prob in nn_predictions_raw]
+        accuracy = np.mean(nn_predictions == y_test)
     else:  # Assuming it's a sklearn model if it's not a neural network
         accuracy = model.score(X_test, y_test)
     return accuracy
-
 
 def save_nn_weights(model):
     model.save_weights("nn_weights.h5")
@@ -85,6 +91,42 @@ def keras_to_onnx_bytes(keras_model):
     return buffer.getvalue()
 
 
+def test_onnx_model(model_bytes, X_test, y_test, threshold):
+    # Load the ONNX model
+    sess = rt.InferenceSession(io.BytesIO(model_bytes).read())
+    input_name = sess.get_inputs()[0].name
+
+    # Convert X_test to float32
+    X_test_float32 = X_test.astype(np.float32)
+
+    # Predict
+    predicted = sess.run(None, {input_name: X_test_float32})[0]
+
+    # Assuming the output of the model is in probabilities and you need to round off to get the class
+    predicted_labels = (predicted >= threshold).astype(int)
+
+    # Flatten predicted_labels for evaluation
+    predicted_labels_flat = predicted_labels.flatten()
+
+    # Calculate precision, recall, and accuracy
+    true_positives = np.sum((predicted_labels_flat == 1) & (y_test == 1))
+    false_positives = np.sum((predicted_labels_flat == 1) & (y_test == 0))
+    true_negatives = np.sum((predicted_labels_flat == 0) & (y_test == 0))
+    false_negatives = np.sum((predicted_labels_flat == 0) & (y_test == 1))
+
+    precision = true_positives / (true_positives + false_positives)
+    recall = true_positives / (true_positives + false_negatives)
+    accuracy = (true_positives + true_negatives) / (true_positives + true_negatives + false_positives + false_negatives)
+
+    print("onnx labels: ", predicted_labels_flat[:30])
+    print(f"Accuracy of onnx: {accuracy * 100:.2f}%")
+    print(f"Precision of onnx: {precision * 100:.2f}%")
+    print(f"Recall of onnx: {recall * 100:.2f}%")
+    print("true positives: " + true_positives)
+
+    return predicted_labels_flat, accuracy, precision, predicted
+
+
 def train(player_name):
     train_start = datetime.datetime.now().isoformat()
 
@@ -92,15 +134,16 @@ def train(player_name):
 
     # Neural Network
     nn_model = train_nn_model(X_train, y_train)
-    nn_accuracy = evaluate_model(nn_model, X_test, y_test, model_type='nn')
     nn_predictions_raw = nn_model.predict(X_test)
     onnx_model = keras_to_onnx_bytes(nn_model)
 
     # Determine the optimal threshold
 
     precision, recall, thresholds = precision_recall_curve(y_test, nn_predictions_raw)
-    f1_scores = 2 * (precision * recall) / (precision + recall)
+    beta = 0  # Adjust as needed
+    f1_scores = (2 + beta ** 2) * (precision * recall) / (beta ** 2 * precision + recall)
     best_threshold = thresholds[f1_scores.argmax()]
+    nn_accuracy = evaluate_model(nn_model, X_test, y_test, best_threshold, model_type='nn')
 
     nn_predictions = [1 if prob >= best_threshold else 0 for prob in nn_predictions_raw]
     nn_precision = precision_score(y_test, nn_predictions)
@@ -108,17 +151,8 @@ def train(player_name):
 
     # Random Forest
     rf_model = train_rf_model(X_train, y_train)
-    rf_accuracy = evaluate_model(rf_model, X_test, y_test, model_type='rf')
+    rf_accuracy = evaluate_model(rf_model, X_test, y_test, best_threshold, model_type='rf')
     log_feature_importance(rf_model)
-
-    # k-Nearest Neighbors
-    N = closest_odd_sqrt(X_train.shape[0])
-    knn_model = train_knn_model(X_train, y_train, N)
-    knn_accuracy = evaluate_model(knn_model, X_test, y_test, model_type='knn')  # 'knn' is just a label for logging
-
-    # Logistic Regression
-    log_model = train_log_model(X_train, y_train)
-    log_accuracy = evaluate_model(log_model, X_test, y_test, model_type='log')
 
     train_end = datetime.datetime.now().isoformat()
 
@@ -130,17 +164,18 @@ def train(player_name):
     plt.title('Precision-Recall Curve')
     plt.legend()
     plt.grid(True)
-    plt.show()
+    #plt.show()
+
+    # test onnx
+    onnx_predicted_labels, onnx_accuracy, onnx_precision, predicted = test_onnx_model(onnx_model, X_test, y_test, best_threshold)
+    equal_count = np.sum(onnx_predicted_labels == nn_predictions)
 
     print(f"Neural Network Test Accuracy: {nn_accuracy}")
     print(f"Neural Network Precision: {nn_precision}")
     print(f"Neural Network Recall: {nn_recall}")
-    print(f"nn raw predictions: {nn_predictions_raw}")
-    print(f"nn predictions: {nn_predictions}")
     print(f"Optimal threshold for Neural Network: {best_threshold}")
-    print(f"Random Forest Test Accuracy: {rf_accuracy}")
-    print(f"k-NN Test Accuracy: {knn_accuracy}")
-    print(f"Logistic Regression Test Accuracy: {log_accuracy}")
+    print("nn labels: " , nn_predictions[:30])
+    print("EQUAL VALUES ARE:", equal_count, "nn length", len(nn_predictions), "onnx length", len(onnx_predicted_labels))
 
     return train_start, train_end, onnx_model, nn_accuracy, nn_precision
 

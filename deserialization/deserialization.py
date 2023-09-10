@@ -49,7 +49,7 @@ def deserialize(json_path: str, dat_path: str) -> List[InputData]:
     run_start = info.get('runStart')
 
     inputs = read_binary_file(dat_path)
-    fmt = "q9f3?"
+    fmt = "q1f1?1f1?1f1?1f1?1f1?4f3?"
 
     deserialized_states = []
     offset = 0
