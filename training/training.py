@@ -35,8 +35,8 @@ def closest_odd_sqrt(N):
 
 def train_nn_model(X_train, y_train):
     model = create_model(X_train)
-    class_weights = {0: 1, 1: 1}
-    model.fit(X_train, y_train, epochs=10, batch_size=32, validation_split=0.2, class_weight=class_weights, )
+    class_weights = {0: 1, 1: 2.6}
+    model.fit(X_train, y_train, epochs=20, batch_size=32, validation_split=0.3, class_weight=class_weights, )
     return model
 
 

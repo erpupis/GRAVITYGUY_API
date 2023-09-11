@@ -3,7 +3,11 @@ from daos.input_dao import InputDao
 from core.database import Database
 from imblearn.over_sampling import SMOTE
 import numpy as np
+from tqdm import tqdm
 from sklearn.model_selection import train_test_split
+from imblearn.over_sampling import ADASYN
+from joblib import Parallel, delayed
+
 
 def initialize_database():
     db = Database()
@@ -49,9 +53,7 @@ def cast_data_types(X_train, X_test, y_train, y_test):
 
     return X_train.to_numpy(), X_test.to_numpy(), y_train.to_numpy(), y_test.to_numpy()
 
-def perform_oversampling(X, y):
-    smote = SMOTE(sampling_strategy='auto')
-    return smote.fit_resample(X, y)
+
 
 def process_data(player_name):
     db = initialize_database()
@@ -66,9 +68,6 @@ def process_data(player_name):
 
     X, y = split_features_labels(df)
     X_train, X_test, y_train, y_test = perform_train_test_split(X, y)
-
-    # Add oversampling here
-    #X_train, y_train = perform_oversampling(X_train, y_train)
 
     X_train, X_test, y_train, y_test = cast_data_types(X_train, X_test, y_train, y_test)
     return X_train, X_test, y_train, y_test
