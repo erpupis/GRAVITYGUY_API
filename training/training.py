@@ -35,8 +35,8 @@ def closest_odd_sqrt(N):
 
 def train_nn_model(X_train, y_train):
     model = create_model(X_train)
-    class_weights = {0: 1, 1: 2.6}
-    model.fit(X_train, y_train, epochs=20, batch_size=32, validation_split=0.3, class_weight=class_weights, )
+    class_weights = {0: 1, 1: 2.5}
+    model.fit(X_train, y_train, epochs=60, batch_size=16, validation_split=0.2, class_weight=class_weights, )
     return model
 
 
@@ -140,7 +140,7 @@ def train(player_name):
     # Determine the optimal threshold
 
     precision, recall, thresholds = precision_recall_curve(y_test, nn_predictions_raw)
-    beta = 1.1
+    beta = 1.33
     denominator = (beta**2 * precision) + recall
     f1_scores = (1+beta**2) * (precision * recall) / np.where(denominator == 0, 1, denominator)
     f1_scores[denominator == 0] = 0.0

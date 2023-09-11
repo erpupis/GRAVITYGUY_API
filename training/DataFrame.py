@@ -19,6 +19,8 @@ def fetch_player_data(db, player_name):
     dao = InputDao(db)
     return dao.get_inputs(player_name)
 
+def multiply_columns_by_100(df, columns_to_multiply):
+    df[columns_to_multiply] = df[columns_to_multiply] * 100
 
 def handle_infinite_values(df):
     df.replace([np.inf], 1000, inplace=True)
@@ -64,6 +66,7 @@ def process_data(player_name):
         return
 
     handle_infinite_values(df)
+    multiply_columns_by_100(df, ['raycast_0_horizontal', 'raycast_30_horizontal','raycast_45_horizontal','raycast_315_horizontal','raycast_330_horizontal'])
     scale_features(df)
 
     X, y = split_features_labels(df)
