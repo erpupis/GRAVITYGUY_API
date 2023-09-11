@@ -140,9 +140,10 @@ def train(player_name):
     # Determine the optimal threshold
 
     precision, recall, thresholds = precision_recall_curve(y_test, nn_predictions_raw)
-    beta = 0  # Adjust as needed
-    f1_scores = (2 + beta ** 2) * (precision * recall) / (beta ** 2 * precision + recall)
-    best_threshold = thresholds[f1_scores[:-1].argmax()]
+    denominator = precision + recall
+    f1_scores = 2 * (precision * recall) / np.where(denominator == 0, 1, denominator)
+    f1_scores[denominator == 0] = 0.0
+    best_threshold = thresholds[f1_scores.argmax()]
     nn_accuracy = evaluate_model(nn_model, X_test, y_test, best_threshold, model_type='nn')
 
     nn_predictions = [1 if prob >= best_threshold else 0 for prob in nn_predictions_raw]
