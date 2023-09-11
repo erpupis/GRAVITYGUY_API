@@ -7,7 +7,7 @@ def create_model(X_train):
     model = Sequential()
 
     # Input layer
-    model.add(Dense(16, activation='relu', input_shape=(X_train.shape[1],)))
+    model.add(Dense(16, activation='elu', input_shape=(X_train.shape[1],)))
 
     # Hidden layers
     model.add(Dense(8, activation='relu'))
