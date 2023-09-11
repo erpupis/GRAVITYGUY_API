@@ -122,7 +122,7 @@ def test_onnx_model(model_bytes, X_test, y_test, threshold):
     print(f"Accuracy of onnx: {accuracy * 100:.2f}%")
     print(f"Precision of onnx: {precision * 100:.2f}%")
     print(f"Recall of onnx: {recall * 100:.2f}%")
-    print("true positives: " + true_positives)
+    print("true positives: ", true_positives)
 
     return predicted_labels_flat, accuracy, precision, predicted
 
@@ -142,7 +142,7 @@ def train(player_name):
     precision, recall, thresholds = precision_recall_curve(y_test, nn_predictions_raw)
     beta = 0  # Adjust as needed
     f1_scores = (2 + beta ** 2) * (precision * recall) / (beta ** 2 * precision + recall)
-    best_threshold = thresholds[f1_scores.argmax()]
+    best_threshold = thresholds[f1_scores[:-1].argmax()]
     nn_accuracy = evaluate_model(nn_model, X_test, y_test, best_threshold, model_type='nn')
 
     nn_predictions = [1 if prob >= best_threshold else 0 for prob in nn_predictions_raw]
